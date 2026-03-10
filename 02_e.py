@@ -10,12 +10,10 @@ num_pairs = 5
 # space
 a, b = 0, np.pi
 h_start = 0.0047 * (2**num_pairs)
-h = h_start
 hs = list(h_start * np.array([1 / 2**i for i in range(num_pairs)]))
 
 # time
 delta_start = 1e-5 * (4**num_pairs)
-delta = delta_start
 deltas = list(delta_start * np.array([1 / 4**i for i in range(num_pairs)]))
 
 t0 = 0
