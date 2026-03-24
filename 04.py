@@ -109,4 +109,4 @@ error_D = factor * np.linalg.norm(u_D - u_real)
 error_PR = factor * np.linalg.norm(u_PR - u_real)
 error_anal = factor * np.linalg.norm(exp_sol - u_real)
 
-error_CN, error_EE, error_IE, error_D, error_PR, error_anal
+print(error_CN, error_EE, error_IE, error_D, error_PR, error_anal)
