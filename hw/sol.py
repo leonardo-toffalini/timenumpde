@@ -4,7 +4,7 @@ import time
 
 # solution of the 1D wave equation
 # on the interval (0,pi/2) over time (0,1)
-# d_tt u(t,x) =  d_xx u(t,x) + 2 - t^2
+# d_tt u(t,x) =  d_xx u(t,x) + 2
 # dt u(u, x) = 0
 # u(u, x) = cos x
 # dx u(t, 0) = 0
@@ -57,9 +57,7 @@ u_prev = u_0.copy()
 
 # second-order start value
 t0 = time_disc[0]
-u = u_0 + 0.5 * delta * delta * (
-    laplacian_with_mixed_bc(u_0) + rhs_force(t0)
-)
+u = u_0 + 0.5 * delta * delta * (laplacian_with_mixed_bc(u_0) + rhs_force(t0))
 u[-1] = right_dirichlet(time_disc[1])
 
 start = time.time()
