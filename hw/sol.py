@@ -1,83 +1,73 @@
 import numpy as np
+import scipy.sparse as sp
 import matplotlib.pyplot as plt
 import time
 
 # solution of the 1D wave equation
-# on the interval (0,pi/2) over time (0,1)
-# d_tt u(t,x) =  d_xx u(t,x) + 2
-# dt u(u, x) = 0
-# u(u, x) = cos x
-# dx u(t, 0) = 0
-# u(t, pi/2) = t^2
+# on the interval [0, pi/2] over time [0, 1]
+# d_tt u(t, x) = d_xx u(t, x) + 2
+# d_t u(0, x) = 0, u(0, x) = cos(x)
+# d_x u(t, 0) = 0, u(t, pi/2) = t^2
+# analytic solution: u(t, x) = t^2 + cos(t) cos(x)
 
-# analytic solution: u(t, x) = t^2 + cos t cos x
-
-# time discretization
 T = 1
+a = 0
+b = np.pi / 2
 N_time_steps = 28
 delta = T / N_time_steps
-
-# space discretization
 Nx = 50
-interval_end = np.pi / 2
-hx = interval_end / (Nx + 1)
+hx = (b - a) / (Nx + 1)
+r_2 = delta * delta / (hx * hx)
+print(f"{Nx=}")
+print(f"{N_time_steps=}")
+print(f"{r_2=}")
 
-# wave CFL number for u_tt = u_xx
-lam = delta / hx
-print(f"{lam=}")
+cfl = delta / hx
+if cfl > 1:
+    print(f"\n=============== CFL condition is not satisfied: cfl={cfl:.6e} ===============\n")
 
+# unknowns are x_0, ..., x_Nx (right Dirichlet node x=b excluded)
+space_grid = np.linspace(a, b - hx, Nx + 1)
 
-def rhs_force(t):
-    return 2
+# second derivative stencil on unknowns (without 1/hx^2 factor)
+D_c_2 = sp.diags([1, -2, 1], offsets=[-1, 0, 1], shape=(Nx + 1, Nx + 1), dtype=None, format="lil")
+D_c_2[0, 1] = 2  # !! very important: handles d_x u(t, 0) = 0 (see explanation in the writeup)
+D_c_2 = D_c_2.tocsr()
 
+force_vec = 2 * np.ones(Nx + 1)
+bc_vec = np.zeros(Nx + 1)
+bc_vec[-1] = 1
 
-def right_dirichlet(t):
-    return t * t
-
-
-def laplacian_with_mixed_bc(u):
-    lap = np.zeros_like(u)
-
-    # interior points: d_xx u(t, x) = 1/h^2 (u[i+1] - 2u[i] + u[i-1])
-    lap[1:-1] = (u[2:] - 2 * u[1:-1] + u[:-2]) / (hx * hx)
-
-    # left boundary: d_x u(t,0) = 0
-    lap[0] = 2 * (u[1] - u[0]) / (hx * hx)
-    return lap
-
-
-# full grid including boundary points x=0 and x=pi/2
-space_disc = np.linspace(0, interval_end, Nx + 2)
-time_disc = np.linspace(0, T, N_time_steps + 1)
-
-# initialize with u(0,x)=cos(x), u_t(0,x)=0
-u_0 = np.cos(space_disc)
-u_0[-1] = right_dirichlet(time_disc[0])
+u_0 = np.cos(space_grid)
 u_prev = u_0.copy()
 
-# second-order start value
-t0 = time_disc[0]
-u = u_0 + 0.5 * delta * delta * (laplacian_with_mixed_bc(u_0) + rhs_force(t0))
-u[-1] = right_dirichlet(time_disc[1])
+t0 = 0
+
+# second order Taylor approximation of u(t, x) around t=0 (see writeup)
+g = t0 * t0
+lap_u0 = (1 / (hx * hx)) * (D_c_2 @ u_prev + bc_vec * g)
+u = u_prev + 0.5 * delta * delta * (lap_u0 + force_vec)
 
 start = time.time()
-for n in range(1, N_time_steps):
-    t_n = time_disc[n]
-    lap = laplacian_with_mixed_bc(u)
-    u_next = 2 * u - u_prev + delta * delta * (lap + rhs_force(t_n))
-    u_next[-1] = right_dirichlet(time_disc[n + 1])
-
+for i in range(1, N_time_steps):
+    tn = i * delta
+    g = tn * tn
+    lap_u = (1 / (hx * hx)) * (D_c_2 @ u + bc_vec * g)
+    u_next = 2 * u - u_prev + delta * delta * (lap_u + force_vec)
     u, u_prev = u_next, u
 end = time.time()
 print(f"Elapsed time: {end - start:.4f} seconds")
 
-u_analytic = T * T + np.cos(T) * np.cos(space_disc)
-print(f"max_abs_error = {np.max(np.abs(u - u_analytic)):.4e}")
+u_num = np.append(u, T * T)
+space_grid_full = np.append(space_grid, b)
+u_exact = T * T + np.cos(T) * np.cos(space_grid_full)
+err = np.linalg.norm(u_num - u_exact, ord=2) * np.sqrt(hx)
+print(f"{err=}")
 
-plt.plot(space_disc, u, label="Numerical solution at T=1")
-plt.plot(space_disc, u_analytic, "--", label="Analytic solution at T=1")
+plt.plot(space_grid_full, u_num, label="Numerical solution")
+plt.plot(space_grid_full, u_exact, label="Analytic solution", linestyle="--")
 plt.legend()
-plt.title("Wave equation with centered second-order scheme")
+plt.title("Leapfrog for wave equation")
 plt.xlabel("x")
-plt.ylabel("u(T,x)")
+plt.ylabel("u(T, x)")
 plt.show()
