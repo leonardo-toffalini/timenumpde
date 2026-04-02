@@ -24,14 +24,20 @@ print(f"{r_2=}")
 
 cfl = delta / hx
 if cfl > 1:
-    print(f"\n=============== CFL condition is not satisfied: cfl={cfl:.6e} ===============\n")
+    print(
+        f"\n=============== CFL condition is not satisfied: cfl={cfl:.6e} (should be <= 1) ===============\n"
+    )
 
 # unknowns are x_0, ..., x_Nx (right Dirichlet node x=b excluded)
 space_grid = np.linspace(a, b - hx, Nx + 1)
 
 # second derivative stencil on unknowns (without 1/hx^2 factor)
-D_c_2 = sp.diags([1, -2, 1], offsets=[-1, 0, 1], shape=(Nx + 1, Nx + 1), dtype=None, format="lil")
-D_c_2[0, 1] = 2  # !! very important: handles d_x u(t, 0) = 0 (see explanation in the writeup)
+D_c_2 = sp.diags(
+    [1, -2, 1], offsets=[-1, 0, 1], shape=(Nx + 1, Nx + 1), dtype=None, format="lil"
+)
+
+# !! very important: handles d_x u(t, 0) = 0 (see explanation in the writeup)
+D_c_2[0, 1] = 2
 D_c_2 = D_c_2.tocsr()
 
 force_vec = 2 * np.ones(Nx + 1)

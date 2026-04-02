@@ -25,7 +25,7 @@
 
 // Title
 #align(center)[
-  #text(size: 1.2em)[= Numerical method for solving the \ 1 dimensional wave equation]
+  #text(size: 1.2em)[= Numerical method for solving the \ one dimensional wave equation]
 
   #v(0.5em)
   #text(size: 1.25em)[Leonardo Toffalini]
@@ -34,8 +34,8 @@
 
 #set heading(numbering: "1.1")
 
-= Introduction
-The wave equation in 1 dimension on the interval $[0, pi/2]$ looks as follows
+= Problem statement
+The one dimensional wave equation on the interval $[0, pi/2]$ looks as follows
 
 $
   cases(
@@ -66,7 +66,7 @@ $
   1/delta^2 (u(t + delta, x) - 2 u(t, x) + u(t - delta, x)) &= 1/h_x^2 (u(t, x+h_x) - 2 u(t, x) + u(t, x - h_x)) + f.
 $
 
-Rearranging the above equation to have only $u(t + delta, x)$ on the right hand
+Rearranging the above equation to have only $u(t + delta, x)$ on the left hand
 side we get
 $
   u(t + delta, x) = 2 u(t, x) - u(t - delta, x) + delta^2/h_x^2 (u(t, x+ h_x) - 2 u(t, x) + u(t, x - h_x)) + delta^2 f.
@@ -78,20 +78,20 @@ x_k)$. Using these notations we can simplify to
   u_k^(n+1) = 2 u_k^n - u_k^(n-1) + delta^2/h_x^2 (u_(k+1)^n - 2 u_k^n + u_(k-1)^n) + delta^2 f.
 $)<eq:num_method>
 
-Note that the error terms collect to form $delta^2 (O(delta^2) + O(h_x^2))$.
+Note, that the error terms collect to form $delta^2 (O(delta^2) + O(h_x^2))$ in total.
 
 == Handling the boundary conditions
 The easiest boundary condition to handle is $u(0, x) = cos x$, which just means that we initialize $u_k^0 = cos k h_x$.
 
 Handling the boundary condition $u(t, pi/2) = t^2$ is just as trivial, we just
-set $u_(N_x-1)^n = (n delta)^2$ in each time step, where $N_x$ is the number of
+set $u_(N_x-1)^n = t_n^2$ in each time step, where $N_x$ is the number of
 grid points in the space discretization.
 
 Next, we handle $partial_t u(0, x) = 0$. Notice, that in @eq:num_method to get
-$u_k^(t+1)$ we need $u_k^n$ and $u_k^(n-1)$, which means that we need $u_k^0$
-and $u_k^1$ as initial values to start our numerical method. To combat this,
-let us write out the second order Taylor approximation of $u(t, x)$ around
-$t=0$:
+$u_k^(t+1)$ we need $u_k^n$ and $u_k^(n-1)$, which means that we need two
+initial values to start our numerical method: $u_k^0$ and $u_k^1$. To combat
+this, let us write out the second order Taylor approximation of $u(t, x)$
+around $t=0$:
 $
   u(delta, x) = u(0, x) + delta overbrace(partial_t u(0, x), 0) + delta^2 partial_(t t) u(0, x) + O(delta^3).
 $
@@ -115,17 +115,23 @@ this problem.
 Let us write out the central finite difference of $partial_x$ to get some
 equation for $u_(-1)^n$
 $
-  partial_x u_0^n approx 1/(2 h_x) (u_1^n - u_(-1)^n).
+  partial_x u_0^n = 1/(2 h_x) (u_1^n - u_(-1)^n) + O(h_x^2).
 $
 
-Since we know that $partial_x u_0^n = 0$ we have that $u_1^n = u_(-1)^n$ for
+Since we know that $partial_x u_0^n = 0$ we have that $u_1^n = u_(-1)^n + O(h_x^3)$ for
 all time steps. With this trick we can resolve the previous problem by giving a
 modified formula for the left end of the space interval
 $
-  partial_(x x) u_0^(n+1) &approx 1/h_x^2 (u_1^n - 2 u_0^n + u_(-1)^n) \
-  &= 1/h_x^2 (u_1^n -2 u_0^n + u_1^n) \
-  &= 2/h_x^2 (u_1^n - u_0^n).
+  partial_(x x) u_0^(n+1) &= 1/h_x^2 (u_1^n - 2 u_0^n + u_(-1)^n) + O(h_x^2) \
+  &= 1/h_x^2 (u_1^n -2 u_0^n + u_1^n + O(h_x^3)) + O(h_x^2) \
+  &= 2/h_x^2 (u_1^n - u_0^n) + O(h_x) + O(h_x^2).
 $
+
+We see that when handling the Neumann boundary condition in space we introduce
+a first order error at the boundary, which naturally proposes the question
+whether this error propagates inward or stays localized at the boundary.
+Luckily, the global consistency error stays the same, which can be checked
+numerically, see @fig:conv.
 
 In conclusion, we have handled the left and right ends of the space interval,
 the left side was handled by $partial_x u(t, 0) = 0$, while the right side was
@@ -135,4 +141,34 @@ We have also handled the start of the time frame, where we needed two initial
 values, one of which was provided as is $u(0, x) = cos x$, and the second we
 figured out how to compute from the Neumann condition $partial_t u(0, x) = 0$.
 
+== Numerical experiments
+In our numerical experiments we implemented the above method and estimated the
+convergence rate of the method by refining the subdivisions and comparing
+against the analytic solution.
 
+It is important to note, that while refining $h_x$ we made sure to adjust
+$delta$ such that $delta\/h_x$ stays the same. We aimed to keep this ratio
+just under $1.0$, since this ensures stability.
+
+The results can be seen in the following table, or more visually in @fig:conv.
+
+#align(center)[
+  #table(
+    columns: (auto, auto, auto, auto, auto, auto),
+    inset: 10pt,
+    align: horizon + center,
+    table.header(
+      [*Level*], $h_x$, $delta$, $delta^2/h_x^2$, $L^2"-error"$, [rate]
+    ),
+    $0$, $3.0799 dot 10^(-2)$, $3.0303 dot 10^(-2)$, $0.9679$, $9.5270 dot 10^(-7)$,  [],
+    $1$, $1.5399 dot 10^(-2)$, $1.5151 dot 10^(-2)$, $0.9679$, $2.3701 dot 10^(-7)$,  $2.0071$,
+    $2$, $7.6999 dot 10^(-3)$, $7.5757 dot 10^(-3)$, $0.9679$, $5.9108 dot 10^(-8)$,  $2.0035$,
+    $3$, $3.8499 dot 10^(-3)$, $3.7878 dot 10^(-3)$, $0.9679$, $1.4758 dot 10^(-8)$,  $2.0018$,
+    $4$, $1.9249 dot 10^(-3)$, $1.8939 dot 10^(-3)$, $0.9679$, $3.6874 dot 10^(-9)$,  $2.0009$,
+    $5$, $9.6249 dot 10^(-4)$, $9.4696 dot 10^(-4)$, $0.9679$, $9.2159 dot 10^(-10)$, $2.0004$,
+  )
+]
+
+#figure(
+  image("conv.jpeg"),
+)<fig:conv>

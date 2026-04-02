@@ -7,13 +7,17 @@ import matplotlib.pyplot as plt
 def solve_wave(hx, delta, T=1.0, a=0.0, b=np.pi / 2):
     cfl = delta / hx
     if cfl > 1:
-        print(f"\n=============== CFL condition is not satisfied: cfl={cfl:.6e} ===============\n")
+        print(
+            f"\n=============== CFL condition is not satisfied: cfl={cfl:.6e} ===============\n"
+        )
 
     interval_len = b - a
 
     n_space_intervals = int(round(interval_len / hx))
     if not np.isclose(interval_len / hx, n_space_intervals):
-        raise ValueError("hx must divide (b-a) so the grid lands exactly on both boundaries.")
+        raise ValueError(
+            "hx must divide (b-a) so the grid lands exactly on both boundaries."
+        )
 
     n_time_steps = int(round(T / delta))
     if not np.isclose(T / delta, n_time_steps):
@@ -28,7 +32,9 @@ def solve_wave(hx, delta, T=1.0, a=0.0, b=np.pi / 2):
     space_grid = np.linspace(a, b - hx, m)
 
     # second derivative stencil without 1/hx^2
-    D_c_2 = sp.diags([1, -2, 1], offsets=[-1, 0, 1], shape=(m, m), format="lil", dtype=None)
+    D_c_2 = sp.diags(
+        [1, -2, 1], offsets=[-1, 0, 1], shape=(m, m), format="lil", dtype=None
+    )
     D_c_2[0, 1] = 2
     D_c_2 = D_c_2.tocsr()
 
@@ -101,12 +107,13 @@ def convergence_table(hx0, delta0, levels=4):
     print(f"fitted slope p={p:.4f}")
 
     plt.loglog(hxs, errors, "o-", label="errors")
-    plt.loglog(hxs, fit_errors, "--", label=f"fit slope={p:.2f}")
+    # plt.loglog(hxs, fit_errors, "-", linewidth=0.0, label=f"fit slope={p:.2f}")
     plt.xlabel("hx")
     plt.ylabel("L2 error")
-    plt.title("Convergence with fitted line")
+    plt.title(f"Convergence (fit slope={p:.4f})")
     plt.legend()
     plt.gca().invert_xaxis()
+    plt.savefig("conv.jpeg", dpi=1600)
     plt.show()
 
 
