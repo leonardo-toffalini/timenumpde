@@ -367,6 +367,19 @@ wheels = [
 ]
 
 [[package]]
+name = "scikit-fem"
+version = "12.0.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+    { name = "scipy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/0c/03/2776ee505116c00a98aa431465c9a424c09a62a3e01f2c0dbcbaecac7b64/scikit_fem-12.0.1.tar.gz", hash = "sha256:2e68398c4b37314626ea735a508fc47a718ee578e51126b99a264a7d8395ec81", size = 128848, upload-time = "2026-01-19T13:41:30.487Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/56/a6/be280db27b3434697323b92cf9268464b53e2dd5711a33c1c275be20302f/scikit_fem-12.0.1-py3-none-any.whl", hash = "sha256:b092ad231013550ff69de04e50bbcb58a423aaa241b418b16da67cc1c0fdef0a", size = 175337, upload-time = "2026-01-19T13:41:28.685Z" },
+]
+
+[[package]]
 name = "scipy"
 version = "1.17.0"
 source = { registry = "https://pypi.org/simple" }
@@ -446,6 +459,7 @@ dependencies = [
     { name = "matplotlib" },
     { name = "nodepy" },
     { name = "numpy" },
+    { name = "scikit-fem" },
     { name = "scipy" },
 ]
 
@@ -454,5 +468,6 @@ requires-dist = [
     { name = "matplotlib", specifier = ">=3.10.8" },
     { name = "nodepy", specifier = ">=1.1.1" },
     { name = "numpy", specifier = ">=2.4.2" },
+    { name = "scikit-fem", specifier = ">=12.0.1" },
     { name = "scipy", specifier = ">=1.17.0" },
 ]

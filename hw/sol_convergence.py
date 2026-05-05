@@ -112,6 +112,7 @@ def convergence_table(hx0, delta0, levels=4):
     plt.ylabel("L2 error")
     plt.title(f"Convergence (fit slope={p:.4f})")
     plt.legend()
+    plt.grid(True)
     plt.gca().invert_xaxis()
     plt.savefig("conv.jpeg", dpi=1600)
     plt.show()
